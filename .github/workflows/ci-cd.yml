@@ -1,0 +1,216 @@
+# ──────────────────────────────────────────────────────────────
+# VeloTrack CI/CD Pipeline — Build, Push to ECR, Deploy to EKS
+# ──────────────────────────────────────────────────────────────
+name: VeloTrack CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+  EKS_CLUSTER_NAME: velotrack-cluster
+  K8S_NAMESPACE: velotrack
+
+jobs:
+  # ─────────────────────────────────────────
+  # Job 1: Build & Push Docker Images to ECR
+  # ─────────────────────────────────────────
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: user-service
+            context: ./backend/user-service
+            port: 5001
+          - name: bicycle-service
+            context: ./backend/bicycle-service
+            port: 5002
+          - name: maintenance-rental-service
+            context: ./backend/maintenance-rental-service
+            port: 5003
+          - name: maintenance-assistant-service
+            context: ./backend/maintenance-assistant-service
+            port: 5004
+          - name: frontend
+            context: ./frontend
+            port: 3000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to ECR
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          SERVICE_NAME: ${{ matrix.service.name }}
+          BUILD_CONTEXT: ${{ matrix.service.context }}
+        run: |
+          # Build the Docker image
+          docker build -t $ECR_REGISTRY/velotrack-$SERVICE_NAME:$IMAGE_TAG $BUILD_CONTEXT
+          docker tag $ECR_REGISTRY/velotrack-$SERVICE_NAME:$IMAGE_TAG $ECR_REGISTRY/velotrack-$SERVICE_NAME:latest
+
+          # Push both tags
+          docker push $ECR_REGISTRY/velotrack-$SERVICE_NAME:$IMAGE_TAG
+          docker push $ECR_REGISTRY/velotrack-$SERVICE_NAME:latest
+
+          echo "Pushed $ECR_REGISTRY/velotrack-$SERVICE_NAME:$IMAGE_TAG"
+
+  # ─────────────────────────────────────────
+  # Job 2: Deploy to Kubernetes (EKS)
+  # ─────────────────────────────────────────
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+      - name: Replace placeholders in K8s manifests
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Replace AWS placeholders in all YAML files
+          find infra/k8s -name '*.yaml' -exec sed -i \
+            -e "s|<AWS_ACCOUNT_ID>|$AWS_ACCOUNT_ID|g" \
+            -e "s|<REGION>|$AWS_REGION|g" \
+            -e "s|:latest|:$IMAGE_TAG|g" \
+            {} \;
+
+      - name: Deploy namespace and infrastructure
+        run: |
+          kubectl apply -f infra/k8s/namespace.yaml
+          kubectl apply -f infra/k8s/configmap.yaml
+          kubectl apply -f infra/k8s/secrets.yaml
+          kubectl apply -f infra/k8s/postgres.yaml
+          kubectl apply -f infra/k8s/rabbitmq.yaml
+
+          # Wait for infrastructure to be ready
+          echo "Waiting for PostgreSQL..."
+          kubectl -n $K8S_NAMESPACE rollout status deployment/postgres --timeout=120s
+          echo "Waiting for RabbitMQ..."
+          kubectl -n $K8S_NAMESPACE rollout status deployment/rabbitmq --timeout=120s
+
+      - name: Deploy backend microservices
+        run: |
+          kubectl apply -f infra/k8s/user-service.yaml
+          kubectl apply -f infra/k8s/bicycle-service.yaml
+          kubectl apply -f infra/k8s/maintenance-rental-service.yaml
+          kubectl apply -f infra/k8s/maintenance-assistant-service.yaml
+
+          # Wait for services
+          echo "Waiting for User Service..."
+          kubectl -n $K8S_NAMESPACE rollout status deployment/user-service --timeout=180s
+          echo "Waiting for Bicycle Service..."
+          kubectl -n $K8S_NAMESPACE rollout status deployment/bicycle-service --timeout=180s
+          echo "Waiting for Maintenance Rental Service..."
+          kubectl -n $K8S_NAMESPACE rollout status deployment/maintenance-rental-service --timeout=180s
+          echo "Waiting for Maintenance Assistant Service..."
+          kubectl -n $K8S_NAMESPACE rollout status deployment/maintenance-assistant-service --timeout=300s
+
+      - name: Deploy frontend
+        run: |
+          kubectl apply -f infra/k8s/frontend.yaml
+          kubectl -n $K8S_NAMESPACE rollout status deployment/frontend --timeout=120s
+
+      - name: Verify deployment
+        run: |
+          echo "──── Pods ────"
+          kubectl -n $K8S_NAMESPACE get pods
+          echo ""
+          echo "──── Services ────"
+          kubectl -n $K8S_NAMESPACE get services
+          echo ""
+          echo "──── Deployments ────"
+          kubectl -n $K8S_NAMESPACE get deployments
+          echo ""
+          echo "──── HPA ────"
+          kubectl -n $K8S_NAMESPACE get hpa
+          echo ""
+          echo "──── ConfigMaps ────"
+          kubectl -n $K8S_NAMESPACE get configmaps
+          echo ""
+          echo "──── Secrets ────"
+          kubectl -n $K8S_NAMESPACE get secrets
+
+      - name: Post-deployment summary
+        run: |
+          echo "✅ VeloTrack deployed successfully!"
+          echo "📦 Image tag: ${{ github.sha }}"
+          echo "🌐 Namespace: $K8S_NAMESPACE"
+          echo ""
+          FRONTEND_IP=$(kubectl -n $K8S_NAMESPACE get svc frontend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "ClusterIP only")
+          echo "🖥️  Frontend: $FRONTEND_IP"
+
+  # ─────────────────────────────────────────
+  # Job 3: Weekly Model Retraining (Cron)
+  # ─────────────────────────────────────────
+  retrain-model:
+    name: Weekly Risk Model Retraining
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+
+      - name: Trigger model retraining
+        run: |
+          # Get the assistant service pod
+          POD=$(kubectl -n $K8S_NAMESPACE get pods -l app=maintenance-assistant-service -o jsonpath='{.items[0].metadata.name}')
+          
+          # Trigger retraining via API
+          kubectl -n $K8S_NAMESPACE exec $POD -- curl -s -X POST http://localhost:5004/api/risk-scores/retrain \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer admin-cron-token"
+          
+          echo "✅ Model retraining triggered"
+
+      - name: Trigger batch score update
+        run: |
+          POD=$(kubectl -n $K8S_NAMESPACE get pods -l app=maintenance-assistant-service -o jsonpath='{.items[0].metadata.name}')
+          
+          kubectl -n $K8S_NAMESPACE exec $POD -- curl -s -X POST http://localhost:5004/api/risk-scores/batch-update \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer admin-cron-token"
+          
+          echo "✅ Batch risk score update completed"
+

@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maintenance-assistant-service
+  namespace: velotrack
+  labels:
+    app: maintenance-assistant-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maintenance-assistant-service
+  template:
+    metadata:
+      labels:
+        app: maintenance-assistant-service
+    spec:
+      containers:
+        - name: maintenance-assistant-service
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/velotrack-maintenance-assistant-service:latest
+          ports:
+            - containerPort: 5004
+          envFrom:
+            - configMapRef:
+                name: velotrack-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: velotrack-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: velotrack-secrets
+                  key: JWT_SECRET
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: velotrack-secrets
+                  key: RABBITMQ_URL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5004
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5004
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maintenance-assistant-service
+  namespace: velotrack
+spec:
+  selector:
+    app: maintenance-assistant-service
+  ports:
+    - port: 5004
+      targetPort: 5004
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: maintenance-assistant-service-hpa
+  namespace: velotrack
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: maintenance-assistant-service
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+

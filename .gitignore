@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.svelte-kit/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Python
+venv/
+*.egg
+*.whl
+
+# ML Models (too large for git)
+*.xgb
+*.pkl
+*.joblib
+data/faiss_index/
+data/models/
+
+# Logs
+*.log
+logs/
+
+# Coverage
+coverage/
+.coverage
+htmlcov/
+

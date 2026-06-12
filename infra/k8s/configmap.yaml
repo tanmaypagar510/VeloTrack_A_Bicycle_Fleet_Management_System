@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: velotrack-config
+  namespace: velotrack
+data:
+  USER_SERVICE_URL: "http://user-service:5001"
+  BICYCLE_SERVICE_URL: "http://bicycle-service:5002"
+  MAINTENANCE_RENTAL_SERVICE_URL: "http://maintenance-rental-service:5003"
+  MAINTENANCE_ASSISTANT_SERVICE_URL: "http://maintenance-assistant-service:5004"
+  OLLAMA_URL: "http://ollama:11434"
+  OLLAMA_MODEL: "mistral"
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+  POSTGRES_DB: "velotrack"
+

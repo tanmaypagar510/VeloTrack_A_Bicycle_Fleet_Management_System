@@ -1,0 +1,811 @@
+{
+  "info": {
+    "name": "VeloTrack - Bicycle Fleet Management API",
+    "description": "Complete API collection for VeloTrack with sample data.\n\n**How to use:**\n1. Run '1. Register Admin' first\n2. Run '2. Login Admin' — token is auto-saved\n3. Run remaining requests in order\n\nBase URL: http://localhost:8080",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "bike_id_1", "value": "" },
+    { "key": "bike_id_2", "value": "" },
+    { "key": "bike_id_3", "value": "" },
+    { "key": "rental_id_1", "value": "" },
+    { "key": "rental_id_2", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth & Users",
+      "item": [
+        {
+          "name": "1.1 Register Admin - Rajesh Kumar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set('token', res.token); }",
+                  "pm.test('Registration successful', function() { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Rajesh Kumar\",\n  \"email\": \"rajesh.kumar@velotrack.in\",\n  \"password\": \"Admin@123\",\n  \"role\": \"admin\",\n  \"phone\": \"+91 9876543210\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/register"
+          }
+        },
+        {
+          "name": "1.2 Register Staff - Priya Sharma",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Registration successful', function() { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Priya Sharma\",\n  \"email\": \"priya.sharma@velotrack.in\",\n  \"password\": \"Staff@123\",\n  \"role\": \"staff\",\n  \"phone\": \"+91 9123456789\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/register"
+          }
+        },
+        {
+          "name": "1.3 Register Staff - Amit Patel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Amit Patel\",\n  \"email\": \"amit.patel@velotrack.in\",\n  \"password\": \"Staff@123\",\n  \"role\": \"staff\",\n  \"phone\": \"+91 9988776655\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/register"
+          }
+        },
+        {
+          "name": "1.4 Login Admin - Rajesh Kumar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set('token', res.token); }",
+                  "pm.test('Login successful', function() { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rajesh.kumar@velotrack.in\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/login"
+          }
+        },
+        {
+          "name": "1.5 Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/auth/me"
+          }
+        },
+        {
+          "name": "1.6 Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"Admin@123\",\n  \"new_password\": \"Admin@456\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/change-password"
+          }
+        },
+        {
+          "name": "1.7 Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/users/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Bicycle Management",
+      "item": [
+        {
+          "name": "2.1 Add Bicycle - Hero Sprint Rover",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.bicycle) { pm.collectionVariables.set('bike_id_1', res.bicycle.id); }",
+                  "pm.test('Bicycle created', function() { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bike_code\": \"VT-MUM-001\",\n  \"make\": \"Hero\",\n  \"model\": \"Sprint Rover\",\n  \"year\": 2024,\n  \"color\": \"Red\",\n  \"condition\": \"Good\",\n  \"location\": \"Andheri Station, Mumbai\",\n  \"purchase_date\": \"2024-01-15\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/"
+          }
+        },
+        {
+          "name": "2.2 Add Bicycle - Firefox Raptor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.bicycle) { pm.collectionVariables.set('bike_id_2', res.bicycle.id); }",
+                  "pm.test('Bicycle created', function() { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bike_code\": \"VT-MUM-002\",\n  \"make\": \"Firefox\",\n  \"model\": \"Raptor\",\n  \"year\": 2023,\n  \"color\": \"Blue\",\n  \"condition\": \"Good\",\n  \"location\": \"Bandra Cycling Hub, Mumbai\",\n  \"purchase_date\": \"2023-06-20\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/"
+          }
+        },
+        {
+          "name": "2.3 Add Bicycle - Atlas Peak",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.bicycle) { pm.collectionVariables.set('bike_id_3', res.bicycle.id); }",
+                  "pm.test('Bicycle created', function() { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bike_code\": \"VT-DEL-003\",\n  \"make\": \"Atlas\",\n  \"model\": \"Peak\",\n  \"year\": 2024,\n  \"color\": \"Black\",\n  \"condition\": \"Good\",\n  \"location\": \"Connaught Place, Delhi\",\n  \"purchase_date\": \"2024-03-10\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/"
+          }
+        },
+        {
+          "name": "2.4 Add Bicycle - Hercules Roadeo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bike_code\": \"VT-BLR-004\",\n  \"make\": \"Hercules\",\n  \"model\": \"Roadeo Hank\",\n  \"year\": 2023,\n  \"color\": \"Green\",\n  \"condition\": \"Fair\",\n  \"location\": \"Cubbon Park, Bangalore\",\n  \"purchase_date\": \"2023-09-05\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/"
+          }
+        },
+        {
+          "name": "2.5 Add Bicycle - Montra Madrock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bike_code\": \"VT-PUN-005\",\n  \"make\": \"Montra\",\n  \"model\": \"Madrock\",\n  \"year\": 2024,\n  \"color\": \"Orange\",\n  \"condition\": \"Good\",\n  \"location\": \"Shivaji Nagar, Pune\",\n  \"purchase_date\": \"2024-05-18\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/"
+          }
+        },
+        {
+          "name": "2.6 Get All Bicycles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/bicycles/"
+          }
+        },
+        {
+          "name": "2.7 Get Bicycle by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/bicycles/{{bike_id_1}}"
+          }
+        },
+        {
+          "name": "2.8 Get Bicycles by Status (Available)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/bicycles/?status=Available"
+          }
+        },
+        {
+          "name": "2.9 Update Bicycle Details",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"color\": \"Maroon\",\n  \"condition\": \"Good\",\n  \"location\": \"Juhu Beach Station, Mumbai\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/{{bike_id_1}}"
+          }
+        },
+        {
+          "name": "2.10 Mark Bicycle Out of Service",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Out of Service\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/{{bike_id_3}}/status"
+          }
+        },
+        {
+          "name": "2.11 Mark Bicycle Available Again",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Available\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/{{bike_id_3}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Rentals",
+      "item": [
+        {
+          "name": "3.1 Checkout Bike 1 - Renter Neha Verma",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.rental) { pm.collectionVariables.set('rental_id_1', res.rental.id); }",
+                  "pm.test('Checkout successful', function() { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_1}},\n  \"renter_name\": \"Neha Verma\",\n  \"renter_contact\": \"+91 9811223344\",\n  \"rate_per_hour\": 60,\n  \"notes\": \"Renting for morning ride at Marine Drive\"\n}"
+            },
+            "url": "{{base_url}}/api/rentals/checkout"
+          }
+        },
+        {
+          "name": "3.2 Checkout Bike 2 - Renter Vikram Singh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.rental) { pm.collectionVariables.set('rental_id_2', res.rental.id); }",
+                  "pm.test('Checkout successful', function() { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_2}},\n  \"renter_name\": \"Vikram Singh\",\n  \"renter_contact\": \"+91 9955667788\",\n  \"rate_per_hour\": 50,\n  \"notes\": \"Weekend ride around Bandra-Worli Sea Link area\"\n}"
+            },
+            "url": "{{base_url}}/api/rentals/checkout"
+          }
+        },
+        {
+          "name": "3.3 Get All Rentals",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/"
+          }
+        },
+        {
+          "name": "3.4 Get Active Rentals",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/?status=Active"
+          }
+        },
+        {
+          "name": "3.5 Get Rental by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/{{rental_id_1}}"
+          }
+        },
+        {
+          "name": "3.6 Return Bike 1 - Neha Verma",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/return/{{rental_id_1}}"
+          }
+        },
+        {
+          "name": "3.7 Return Bike 2 - Vikram Singh",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/return/{{rental_id_2}}"
+          }
+        },
+        {
+          "name": "3.8 Get Returned Rentals",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/?status=Returned"
+          }
+        },
+        {
+          "name": "3.9 Get Rentals for Bike 1",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/?bicycle_id={{bike_id_1}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Maintenance Logs",
+      "item": [
+        {
+          "name": "4.1 Create Maintenance Log - Bike 1 (Tyre Puncture)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_1}},\n  \"problem_description\": \"Rear tyre puncture found after rental return. Tube has multiple patches from previous repairs.\",\n  \"work_done\": \"Replaced inner tube with new one. Checked tyre pressure and inflated to 45 PSI.\",\n  \"technician\": \"Suresh Yadav\",\n  \"cost\": 350\n}"
+            },
+            "url": "{{base_url}}/api/maintenance/"
+          }
+        },
+        {
+          "name": "4.2 Create Maintenance Log - Bike 2 (Brake Issue)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_2}},\n  \"problem_description\": \"Front brake pads worn out. Braking distance increased significantly. Reported by renter Vikram Singh.\",\n  \"work_done\": \"Replaced front and rear brake pads. Adjusted brake cable tension. Lubricated brake levers.\",\n  \"technician\": \"Manoj Tiwari\",\n  \"cost\": 800\n}"
+            },
+            "url": "{{base_url}}/api/maintenance/"
+          }
+        },
+        {
+          "name": "4.3 Create Maintenance Log - Bike 1 (Chain Service)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_1}},\n  \"problem_description\": \"Chain making grinding noise. Gear shifting not smooth. Chain stretched beyond wear limit.\",\n  \"work_done\": \"Replaced chain and rear cassette. Lubricated derailleur. Adjusted gear indexing for all 7 speeds.\",\n  \"technician\": \"Suresh Yadav\",\n  \"cost\": 1500\n}"
+            },
+            "url": "{{base_url}}/api/maintenance/"
+          }
+        },
+        {
+          "name": "4.4 Create Maintenance Log - Bike 3 (General Service)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_3}},\n  \"problem_description\": \"Scheduled quarterly full service. Seat post slipping, headset loose, spokes need truing.\",\n  \"work_done\": \"Full service completed. Tightened seat clamp, adjusted headset bearings, trued both wheels, greased bottom bracket.\",\n  \"technician\": \"Deepak Joshi\",\n  \"cost\": 1200\n}"
+            },
+            "url": "{{base_url}}/api/maintenance/"
+          }
+        },
+        {
+          "name": "4.5 Get All Maintenance Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/maintenance/"
+          }
+        },
+        {
+          "name": "4.6 Get Maintenance Logs for Bike 1",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/maintenance/?bicycle_id={{bike_id_1}}"
+          }
+        },
+        {
+          "name": "4.7 Get Complete History - Bike 1",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/maintenance/history/{{bike_id_1}}"
+          }
+        },
+        {
+          "name": "4.8 Get Complete History - Bike 2",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/maintenance/history/{{bike_id_2}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Mark Bikes Available After Maintenance",
+      "item": [
+        {
+          "name": "5.1 Mark Bike 1 Available",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Available\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/{{bike_id_1}}/status"
+          }
+        },
+        {
+          "name": "5.2 Mark Bike 2 Available",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Available\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/{{bike_id_2}}/status"
+          }
+        },
+        {
+          "name": "5.3 Mark Bike 3 Available",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Available\"\n}"
+            },
+            "url": "{{base_url}}/api/bicycles/{{bike_id_3}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Second Round of Rentals",
+      "item": [
+        {
+          "name": "6.1 Checkout Bike 1 - Renter Ananya Iyer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.rental) { pm.collectionVariables.set('rental_id_1', res.rental.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_1}},\n  \"renter_name\": \"Ananya Iyer\",\n  \"renter_contact\": \"+91 9876012345\",\n  \"rate_per_hour\": 60,\n  \"notes\": \"Evening ride to Carter Road promenade\"\n}"
+            },
+            "url": "{{base_url}}/api/rentals/checkout"
+          }
+        },
+        {
+          "name": "6.2 Checkout Bike 3 - Renter Rohan Deshmukh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.rental) { pm.collectionVariables.set('rental_id_2', res.rental.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bicycle_id\": {{bike_id_3}},\n  \"renter_name\": \"Rohan Deshmukh\",\n  \"renter_contact\": \"+91 9823456789\",\n  \"rate_per_hour\": 40,\n  \"notes\": \"Riding to India Gate and back\"\n}"
+            },
+            "url": "{{base_url}}/api/rentals/checkout"
+          }
+        },
+        {
+          "name": "6.3 Return Bike 1 - Ananya Iyer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/return/{{rental_id_1}}"
+          }
+        },
+        {
+          "name": "6.4 Return Bike 3 - Rohan Deshmukh",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/rentals/return/{{rental_id_2}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Risk Scores",
+      "item": [
+        {
+          "name": "7.1 Get All Risk Scores",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/risk-scores/"
+          }
+        },
+        {
+          "name": "7.2 Get Risk Score - Bike 1",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/risk-scores/{{bike_id_1}}"
+          }
+        },
+        {
+          "name": "7.3 Get Risk Score - Bike 2",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/risk-scores/{{bike_id_2}}"
+          }
+        },
+        {
+          "name": "7.4 Batch Update All Risk Scores",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/risk-scores/batch-update"
+          }
+        },
+        {
+          "name": "7.5 Retrain Risk Model (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/risk-scores/retrain"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Maintenance Assistant (AI)",
+      "item": [
+        {
+          "name": "8.1 Ask - Which bikes need servicing?",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Which bikes haven't been serviced in the last 30 days but have high rental counts?\"\n}"
+            },
+            "url": "{{base_url}}/api/maintenance-assistant/ask"
+          }
+        },
+        {
+          "name": "8.2 Ask - Problems with Bike 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What problems has this bike had in the past?\",\n  \"bike_id\": {{bike_id_1}}\n}"
+            },
+            "url": "{{base_url}}/api/maintenance-assistant/ask"
+          }
+        },
+        {
+          "name": "8.3 Ask - Does Bike 2 need maintenance?",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Based on its history, does this bike need maintenance soon?\",\n  \"bike_id\": {{bike_id_2}}\n}"
+            },
+            "url": "{{base_url}}/api/maintenance-assistant/ask"
+          }
+        },
+        {
+          "name": "8.4 Ask - Most common issue across fleet",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What was the most common issue logged across the fleet last month?\"\n}"
+            },
+            "url": "{{base_url}}/api/maintenance-assistant/ask"
+          }
+        },
+        {
+          "name": "8.5 Ask - Rental summary for Bike 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Give me a summary of all rentals and issues for this bike\",\n  \"bike_id\": {{bike_id_1}}\n}"
+            },
+            "url": "{{base_url}}/api/maintenance-assistant/ask"
+          }
+        },
+        {
+          "name": "8.6 Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/maintenance-assistant/history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Health Checks",
+      "item": [
+        {
+          "name": "9.1 User Service Health",
+          "request": { "method": "GET", "url": "http://localhost:5001/health" }
+        },
+        {
+          "name": "9.2 Bicycle Service Health",
+          "request": { "method": "GET", "url": "http://localhost:5002/health" }
+        },
+        {
+          "name": "9.3 Maintenance Rental Service Health",
+          "request": { "method": "GET", "url": "http://localhost:5003/health" }
+        },
+        {
+          "name": "9.4 Maintenance Assistant Service Health",
+          "request": { "method": "GET", "url": "http://localhost:5004/health" }
+        }
+      ]
+    }
+  ]
+}
+

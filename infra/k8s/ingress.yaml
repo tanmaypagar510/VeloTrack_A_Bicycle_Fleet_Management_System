@@ -1,0 +1,75 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: velotrack-ingress
+  namespace: velotrack
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+spec:
+  rules:
+    - http:
+        paths:
+          # User Service
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 5001
+          - path: /api/users
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 5001
+          # Bicycle Service
+          - path: /api/bicycles
+            pathType: Prefix
+            backend:
+              service:
+                name: bicycle-service
+                port:
+                  number: 5002
+          # Maintenance & Rental Service
+          - path: /api/maintenance
+            pathType: Prefix
+            backend:
+              service:
+                name: maintenance-rental-service
+                port:
+                  number: 5003
+          - path: /api/rentals
+            pathType: Prefix
+            backend:
+              service:
+                name: maintenance-rental-service
+                port:
+                  number: 5003
+          # Maintenance Assistant Service
+          - path: /api/maintenance-assistant
+            pathType: Prefix
+            backend:
+              service:
+                name: maintenance-assistant-service
+                port:
+                  number: 5004
+          - path: /api/risk-scores
+            pathType: Prefix
+            backend:
+              service:
+                name: maintenance-assistant-service
+                port:
+                  number: 5004
+          # Frontend (catch-all)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+

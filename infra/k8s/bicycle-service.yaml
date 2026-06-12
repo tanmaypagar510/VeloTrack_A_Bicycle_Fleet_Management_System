@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bicycle-service
+  namespace: velotrack
+  labels:
+    app: bicycle-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bicycle-service
+  template:
+    metadata:
+      labels:
+        app: bicycle-service
+    spec:
+      containers:
+        - name: bicycle-service
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/velotrack-bicycle-service:latest
+          ports:
+            - containerPort: 5002
+          envFrom:
+            - configMapRef:
+                name: velotrack-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: velotrack-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: velotrack-secrets
+                  key: JWT_SECRET
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: velotrack-secrets
+                  key: RABBITMQ_URL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bicycle-service
+  namespace: velotrack
+spec:
+  selector:
+    app: bicycle-service
+  ports:
+    - port: 5002
+      targetPort: 5002
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: bicycle-service-hpa
+  namespace: velotrack
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: bicycle-service
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
