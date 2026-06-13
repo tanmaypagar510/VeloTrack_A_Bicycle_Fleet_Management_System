@@ -31,6 +31,8 @@ spec:
                 secretKeyRef:
                   name: velotrack-secrets
                   key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
@@ -63,6 +65,7 @@ metadata:
   name: postgres-pvc
   namespace: velotrack
 spec:
+  storageClassName: gp2
   accessModes:
     - ReadWriteOnce
   resources:

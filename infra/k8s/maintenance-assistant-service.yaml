@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: maintenance-assistant-service
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/velotrack-maintenance-assistant-service:latest
+          image: tanmaypagar510/velotrack-maintenance-assistant-service:latest
           ports:
             - containerPort: 5004
           envFrom:

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: maintenance-rental-service
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/velotrack-maintenance-rental-service:latest
+          image: tanmaypagar510/velotrack-maintenance-rental-service:latest
           ports:
             - containerPort: 5003
           envFrom:

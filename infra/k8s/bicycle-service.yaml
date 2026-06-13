@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: bicycle-service
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/velotrack-bicycle-service:latest
+          image: tanmaypagar510/velotrack-bicycle-service:latest
           ports:
             - containerPort: 5002
           envFrom:
