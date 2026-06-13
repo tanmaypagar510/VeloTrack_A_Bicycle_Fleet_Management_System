@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: tanmaypagar510/velotrack-frontend:latest
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/velotrack-frontend:latest
           ports:
             - containerPort: 3000
           env:

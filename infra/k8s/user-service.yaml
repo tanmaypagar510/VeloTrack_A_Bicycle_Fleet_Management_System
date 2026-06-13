@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: tanmaypagar510/velotrack-user-service:latest
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/velotrack-user-service:latest
           ports:
             - containerPort: 5001
           envFrom:
