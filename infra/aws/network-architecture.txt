@@ -1,0 +1,71 @@
+# ─────────────────────────────────────────────────────────────
+# VeloTrack - VPC & Network Configuration (eksctl handles this)
+# This file documents the network architecture created by eksctl
+# ─────────────────────────────────────────────────────────────
+#
+# VPC CIDR: 10.0.0.0/16 (65,536 IPs — minimal wastage)
+#
+# ┌─────────────────────────────────────────────────────┐
+# │  Subnet Layout (6 subnets, 2 AZs)                   │
+# ├──────────────────┬──────────┬────────┬──────────────┤
+# │ Name             │ CIDR     │ Type   │ AZ           │
+# ├──────────────────┼──────────┼────────┼──────────────┤
+# │ public-a         │10.0.1.0/24│Public │ us-east-1a   │
+# │ public-b         │10.0.2.0/24│Public │ us-east-1b   │
+# │ private-a        │10.0.3.0/24│Private│ us-east-1a   │
+# │ private-b        │10.0.4.0/24│Private│ us-east-1b   │
+# │ db-a (isolated)  │10.0.5.0/24│Private│ us-east-1a   │
+# │ db-b (isolated)  │10.0.6.0/24│Private│ us-east-1b   │
+# └──────────────────┴──────────┴────────┴──────────────┘
+#
+# Each /24 subnet = 254 usable IPs (sufficient for EKS pods)
+# Total used: 6 x /24 = 1,536 IPs out of 65,536 (~2.3% usage)
+#
+# ─── Security Groups ───
+#
+# 1. eks-cluster-sg: Controls cluster API access
+#    - Inbound: HTTPS (443) from your IP only
+#    - Outbound: All traffic to node SG
+#
+# 2. eks-node-sg: Controls node communication
+#    - Inbound: All from cluster SG, All from self (node-to-node)
+#    - Outbound: All traffic
+#
+# 3. postgres-sg (if using RDS instead of in-cluster):
+#    - Inbound: PostgreSQL (5432) from eks-node-sg only
+#    - Outbound: None
+#
+# ─── NACLs ───
+#
+# Public subnets NACL:
+#   - Inbound: Allow HTTP(80), HTTPS(443), Ephemeral(1024-65535)
+#   - Outbound: Allow All
+#
+# Private subnets NACL:
+#   - Inbound: Allow from VPC CIDR (10.0.0.0/16) only
+#   - Outbound: Allow HTTPS(443) to 0.0.0.0/0 (for ECR pull)
+#
+# DB subnets NACL:
+#   - Inbound: Allow PostgreSQL(5432) from private subnets only
+#   - Outbound: Allow Ephemeral(1024-65535) to private subnets
+#
+# ─── Network Segregation Summary ───
+#
+# ┌──────────┐     ┌──────────┐     ┌──────────┐
+# │  Internet│────▸│  Public  │────▸│  Private │
+# │          │     │  Subnet  │     │  Subnet  │
+# │          │     │ (ALB/NAT)│     │ (EKS     │
+# │          │     │          │     │  Nodes)  │
+# └──────────┘     └──────────┘     └────┬─────┘
+#                                        │
+#                                   ┌────▾─────┐
+#                                   │ DB Subnet│
+#                                   │ (RDS/    │
+#                                   │ Postgres)│
+#                                   └──────────┘
+#
+# - ALB sits in public subnets (internet-facing)
+# - EKS worker nodes in private subnets (no direct internet access)
+# - NAT Gateway in public subnet for outbound from private subnets
+# - Database in isolated DB subnets (no internet access at all)
+

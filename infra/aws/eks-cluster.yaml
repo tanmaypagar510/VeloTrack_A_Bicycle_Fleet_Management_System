@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────────────────────
+# VeloTrack EKS Cluster Configuration
+# Usage: eksctl create cluster -f infra/aws/eks-cluster.yaml
+# ─────────────────────────────────────────────────────────────
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: velotrack-cluster
+  region: us-east-1
+  version: "1.29"
+
+vpc:
+  cidr: "10.0.0.0/16"
+  nat:
+    gateway: Single
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: true
+
+iam:
+  withOIDC: true
+
+managedNodeGroups:
+  - name: velotrack-nodes
+    instanceType: t3.medium
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
+    volumeSize: 30
+    ssh:
+      allow: false
+    labels:
+      role: worker
+    tags:
+      Project: VeloTrack
+      Environment: production
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::policy/CloudWatchAgentServerPolicy
+
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - api
+      - audit
+      - authenticator
+      - controllerManager
+      - scheduler
+
+addons:
+  - name: vpc-cni
+    version: latest
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
+

@@ -9,8 +9,10 @@ data:
   MAINTENANCE_RENTAL_SERVICE_URL: "http://maintenance-rental-service:5003"
   MAINTENANCE_ASSISTANT_SERVICE_URL: "http://maintenance-assistant-service:5004"
   OLLAMA_URL: "http://ollama:11434"
-  OLLAMA_MODEL: "mistral"
+  OLLAMA_MODEL: "tinyllama"
+  RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
   RABBITMQ_HOST: "rabbitmq"
   RABBITMQ_PORT: "5672"
   POSTGRES_DB: "velotrack"
+  JWT_EXPIRY_HOURS: "24"
 

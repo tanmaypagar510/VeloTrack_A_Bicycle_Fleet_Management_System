@@ -1,0 +1,115 @@
+# CloudWatch Fluent Bit DaemonSet for centralized logging
+# Collects logs from all pods and sends to CloudWatch Logs
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: amazon-cloudwatch
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         5
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/velotrack-*.log
+        Parser            docker
+        DB                /var/fluent-bit/state/flb_container.db
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_Tag_Prefix     kube.var.log.containers.
+        Merge_Log           On
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off
+
+    [OUTPUT]
+        Name                cloudwatch_logs
+        Match               *
+        region              us-east-1
+        log_group_name      /velotrack/eks/application
+        log_stream_prefix   velotrack-
+        auto_create_group   true
+
+  parsers.conf: |
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: amazon-cloudwatch
+  labels:
+    app: fluent-bit
+spec:
+  selector:
+    matchLabels:
+      app: fluent-bit
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+    spec:
+      serviceAccountName: fluent-bit
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: fluent-bit
+          image: amazon/aws-for-fluent-bit:latest
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: fluent-bit-config
+              mountPath: /fluent-bit/etc/
+            - name: runlogjournal
+              mountPath: /run/log/journal
+              readOnly: true
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: fluent-bit-config
+          configMap:
+            name: fluent-bit-config
+        - name: runlogjournal
+          hostPath:
+            path: /run/log/journal
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluent-bit
+  namespace: amazon-cloudwatch
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/velotrack-cloudwatch-role
+
