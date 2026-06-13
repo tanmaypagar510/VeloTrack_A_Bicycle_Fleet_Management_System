@@ -109,7 +109,7 @@ A **cloud-native, microservices-based** fleet management system for bicycle rent
 | **Frontend** | Static hosting | SvelteKit with adapter-node on K8s |
 | **Database** | Managed SQL | PostgreSQL 15 with PersistentVolumeClaim |
 | **Vector Store** | Embedding storage | FAISS (in-process, within Assistant service) |
-| **Local LLM** | Open-source LLM | Ollama (Mistral model) |
+| **Local LLM** | Open-source LLM | Ollama (TinyLlama model) |
 | **Risk Model Store** | Versioned model artifacts | Filesystem (S3 in production) |
 | **Message Broker** | Async event-driven | RabbitMQ with topic exchange |
 | **Scalability** | Horizontal Pod Autoscaling | HPA max 3 replicas, CPU threshold 70% |
@@ -128,7 +128,7 @@ A **cloud-native, microservices-based** fleet management system for bicycle rent
 | **Message Broker** | RabbitMQ 3 (pika client) |
 | **ML/AI** | XGBoost, SHAP, scikit-learn, sentence-transformers |
 | **Vector Store** | FAISS (faiss-cpu) |
-| **LLM** | Ollama (Mistral 7B) |
+| **LLM** | Ollama (TinyLlama) |
 | **Containerization** | Docker, Docker Compose |
 | **Orchestration** | Kubernetes (EKS) |
 | **CI/CD** | GitHub Actions |
@@ -212,7 +212,7 @@ VeloTrack/
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/VeloTrack_A_Bicycle_Fleet_Management_System.git
+git clone https://github.com/tanmaypagar510/VeloTrack_A_Bicycle_Fleet_Management_System.git
 cd VeloTrack_A_Bicycle_Fleet_Management_System
 ```
 
@@ -234,8 +234,8 @@ docker-compose logs -f
 
 ### Step 4: Pull the Ollama LLM Model
 ```bash
-# After Ollama container is running, pull the Mistral model
-docker exec velotrack-ollama ollama pull mistral
+# After Ollama container is running, pull the TinyLlama model
+docker exec velotrack-ollama ollama pull tinyllama
 ```
 
 ### Step 5: Access the Application
@@ -264,6 +264,8 @@ docker-compose down          # Stop containers
 docker-compose down -v       # Stop + remove volumes
 ```
 
+> 📖 **For complete AWS deployment, CI/CD setup, and step-by-step guide, see [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)**
+
 ---
 
 ## 📡 API Documentation
@@ -273,6 +275,10 @@ Swagger/OpenAPI documentation is auto-generated and available at `/apidocs` for 
 - Bicycle Service: http://localhost:5002/apidocs
 - Maintenance Service: http://localhost:5003/apidocs
 - Assistant Service: http://localhost:5004/apidocs
+
+### Postman Collections
+- **Local (Docker Compose):** [docs/VeloTrack_API_Collection.postman.json](docs/VeloTrack_API_Collection.postman.json)
+- **AWS (EKS):** [docs/VeloTrack_AWS_API_Collection.postman.json](docs/VeloTrack_AWS_API_Collection.postman.json)
 
 ### Key API Endpoints
 
