@@ -196,21 +196,22 @@ jobs:
         run: |
           # Get the assistant service pod
           POD=$(kubectl -n $K8S_NAMESPACE get pods -l app=maintenance-assistant-service -o jsonpath='{.items[0].metadata.name}')
-          
+
           # Trigger retraining via API
           kubectl -n $K8S_NAMESPACE exec $POD -- curl -s -X POST http://localhost:5004/api/risk-scores/retrain \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer admin-cron-token"
-          
+
           echo "✅ Model retraining triggered"
 
       - name: Trigger batch score update
         run: |
           POD=$(kubectl -n $K8S_NAMESPACE get pods -l app=maintenance-assistant-service -o jsonpath='{.items[0].metadata.name}')
-          
+
           kubectl -n $K8S_NAMESPACE exec $POD -- curl -s -X POST http://localhost:5004/api/risk-scores/batch-update \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer admin-cron-token"
-          
+
           echo "✅ Batch risk score update completed"
+
 

@@ -6,7 +6,7 @@ class Config:
     JWT_SECRET = os.environ.get('JWT_SECRET', 'supersecretjwtkey123')
     RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
     OLLAMA_URL = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
-    OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'mistral')
+    OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'tinyllama')
     MAINTENANCE_RENTAL_SERVICE_URL = os.environ.get('MAINTENANCE_RENTAL_SERVICE_URL', 'http://localhost:5003')
     BICYCLE_SERVICE_URL = os.environ.get('BICYCLE_SERVICE_URL', 'http://localhost:5002')
     FAISS_INDEX_PATH = os.environ.get('FAISS_INDEX_PATH', '/app/data/faiss_index')

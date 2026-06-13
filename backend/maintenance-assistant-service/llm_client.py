@@ -5,7 +5,7 @@ logger = logging.getLogger('ollama-client')
 
 
 class OllamaClient:
-    def __init__(self, base_url, model='mistral'):
+    def __init__(self, base_url, model='tinyllama'):
         self.base_url = base_url.rstrip('/')
         self.model = model
 
@@ -19,7 +19,7 @@ class OllamaClient:
                 'options': {
                     'temperature': 0.3,
                     'top_p': 0.9,
-                    'num_predict': 1024
+                    'num_predict': 512
                 }
             }
             if system_prompt:
@@ -28,7 +28,7 @@ class OllamaClient:
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json=payload,
-                timeout=120
+                timeout=300
             )
 
             if response.status_code == 200:
