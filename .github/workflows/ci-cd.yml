@@ -175,12 +175,12 @@ jobs:
 
       - name: Post-deployment summary
         run: |
-          echo "✅ VeloTrack deployed successfully!"
-          echo "📦 Image tag: ${{ github.sha }}"
-          echo "🌐 Namespace: $K8S_NAMESPACE"
+          echo " VeloTrack deployed successfully!"
+          echo " Image tag: ${{ github.sha }}"
+          echo " Namespace: $K8S_NAMESPACE"
           echo ""
           FRONTEND_IP=$(kubectl -n $K8S_NAMESPACE get svc frontend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "ClusterIP only")
-          echo "🖥️  Frontend: $FRONTEND_IP"
+          echo "  Frontend: $FRONTEND_IP"
 
   # ─────────────────────────────────────────
   # Job 3: Weekly Model Retraining (Cron)
@@ -211,7 +211,7 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer admin-cron-token"
 
-          echo "✅ Model retraining triggered"
+          echo " Model retraining triggered"
 
       - name: Trigger batch score update
         run: |
@@ -221,6 +221,6 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer admin-cron-token"
 
-          echo "✅ Batch risk score update completed"
+          echo " Batch risk score update completed"
 
 

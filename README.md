@@ -263,11 +263,7 @@ curl http://localhost:5004/health
 docker-compose down          # Stop containers
 docker-compose down -v       # Stop + remove volumes
 ```
-
-> 📖 **For complete AWS deployment, CI/CD setup, and step-by-step guide, see [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)**
-
 ---
-
 ## 📡 API Documentation
 
 Swagger/OpenAPI documentation is auto-generated and available at `/apidocs` for each service:
@@ -458,60 +454,6 @@ AWS_ACCOUNT_ID        - AWS account number
 
 ---
 
-## 🔒 Security
-
-| Measure | Implementation |
-|---|---|
-| **JWT Authentication** | All APIs protected with JWT Bearer tokens |
-| **Password Hashing** | BCrypt with salt |
-| **Role-Based Access** | `admin` and `staff` roles, `admin_required` decorator |
-| **Secrets Management** | K8s Secrets (base64 encoded) for sensitive config |
-| **Network Security** | ClusterIP services (not exposed externally), NGINX gateway |
-| **CORS** | Configured per-service |
-| **HTTPS** | TLS termination at load balancer (production) |
-| **Principle of Least Privilege** | Services only access what they need |
-
----
-
-## 📊 Scalability & Observability
-
-### Scalability
-- **Stateless Services**: All microservices are stateless, enabling horizontal scaling
-- **HPA**: Kubernetes Horizontal Pod Autoscaler for all deployments (max 3 replicas)
-- **Load Balancing**: NGINX distributes traffic across service instances
-- **Database**: PostgreSQL with connection pooling
-
-### Observability
-- **Structured Logging**: Python `logging` with timestamps, service names, log levels
-- **Health Checks**: `/health` endpoint on every service
-- **CloudWatch Integration**: Container logs stream to CloudWatch via EKS
-- **Error Tracking**: Try-catch with logged warnings for all inter-service calls
-- **RabbitMQ Monitoring**: Management dashboard on port 15672
-
----
-
-## 🎬 User Walkthrough
-
-### Scenario: Complete Fleet Management Workflow
-
-1. **Admin logs in** → `POST /api/auth/login` with credentials → receives JWT token
-
-2. **Registers a new bicycle** → Navigates to Bicycles page → Clicks "Add Bicycle" → Fills form (bike_code: BIKE-042, make: Trek, model: FX 3, condition: Good) → Submits
-
-3. **Marks it as rented** → On Rentals page → Clicks "New Checkout" → Selects BIKE-042 → Enters renter name → Submits (status changes to "Rented", RabbitMQ event published)
-
-4. **Returns the bike** → Clicks "Return" on the active rental → Bike status returns to "Available", duration calculated, anomaly detection runs
-
-5. **Creates maintenance log after return** → Maintenance page → "New Log" → Selects BIKE-042 → Describes problem "Brake pads worn" → Work done "Replaced front brake pads" → Submits (RabbitMQ event triggers risk recalculation)
-
-6. **Views bicycle history** → Clicks BIKE-042 in bicycle list → Sees full maintenance + rental history with anomaly tags → Views risk score badge + 30-day trend sparkline
-
-7. **Asks the Maintenance Assistant** → Navigates to Assistant page → Types "Does bike #42 need servicing?" → Receives AI-generated recommendation grounded in actual maintenance and rental history with source records displayed
-
-8. **Reviews risk scores** → Dashboard shows High Risk Alert if >20% of fleet is high risk → Each bike card shows color-coded risk badge (Low/Medium/High) → Clicks badge to see "Why this score?" tooltip with top contributing features
-
----
-
 ## 🌐 Network Architecture
 
 ```
@@ -574,32 +516,3 @@ AWS_ACCOUNT_ID        - AWS account number
               │                              │
               └──────────────────────────────┘
 ```
-
-### Security Groups
-| Security Group | Inbound Rules |
-|---|---|
-| **ALB SG** | Port 80/443 from 0.0.0.0/0 |
-| **EKS Node SG** | All traffic from ALB SG, All traffic from self |
-| **RDS SG** | Port 5432 from EKS Node SG only |
-| **RabbitMQ SG** | Port 5672 from EKS Node SG only |
-
----
-
-## 📝 Documentation Deliverables Checklist
-
-- [x] **Public GitHub Repo** – Full source code with commits
-- [x] **DevOps** – Kubernetes manifests, Dockerfiles, CI/CD pipeline YAML
-- [x] **Architecture Overview** – This README with microservice descriptions & cloud patterns
-- [x] **Setup Guide** – Step-by-step Docker Compose setup
-- [x] **API Documentation** – Swagger/OpenAPI via Flasgger (auto-generated)
-- [x] **User Walkthrough** – Complete scenario documented above
-- [ ] **Network Architecture Diagram** – Draw.io diagram (see ASCII above)
-- [ ] **Cloud Deployment Screenshots** – AWS console screenshots
-- [ ] **Demo Recording** – 5-10 min video walkthrough
-
----
-
-## 📄 License
-
-This project is developed as a case study for educational purposes.
-
